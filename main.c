@@ -32,7 +32,7 @@ uint8_t row_num = 1, col_num = 1;   //Size of field
 // Functions definitions
 bool **read_csv(char *filename);                                    // Read csv file with initial conditions and create array
 uint8_t get_num_neighbours(bool **field, uint8_t row, uint8_t col); // Get the number of alive neighbour cells
-bool **update_field(bool **field);                                  // Calculate the next generation
+bool **update_board(bool **field);                                  // Calculate the next generation
 uint8_t write_csv(bool **field, char *filename);                    // Write game board into a csv file
 
 int main(int argc, char *argv[]) {
@@ -42,11 +42,11 @@ int main(int argc, char *argv[]) {
 
     for(register uint8_t i = 0; i < row_num; ++i) {
         for(register uint8_t j = 0; j < col_num; ++j) {
-            //printf("%d ", board[i][j]);
-            printf("%d ", get_num_neighbours(board, i, j));
+            printf("%d ", board[i][j]);
         }
         printf("\n");
     }
+    printf("\n");
 
     for(register uint8_t i = 0; i < row_num; ++i) {
         free(board[i]);
@@ -147,4 +147,37 @@ uint8_t get_num_neighbours(bool **field, uint8_t row, uint8_t col) { // I think 
     }
 
     return num;
+}
+
+bool **update_board(bool **field) {
+    bool **updated; // Array for new generation
+
+    if((updated = (bool**) malloc(sizeof(bool*) * row_num)) == NULL) {
+        exit(ERR_ALLOC);
+    }
+
+    for(register uint8_t i = 0; i < row_num; ++i) {
+        if((updated[i] = (bool*) malloc(sizeof(bool) * col_num)) == NULL) {
+            exit(ERR_ALLOC);
+        }
+    }
+
+    // Calculate new generation of game board based on S23/B3 rules
+    for(register uint8_t i = 0; i < row_num; ++i) {
+        for(register uint8_t j = 0; j < col_num; ++j) {
+            uint8_t neighbours = get_num_neighbours(field, i, j);
+
+            if(neighbours < 2) {
+                updated[i][j] = false;          // Any live cell with fewer than two live neighbours dies
+            } else if(neighbours == 2) {
+                updated[i][j] = field[i][j];    // Any live cell with two live neighbours stay alive/died
+            } else if(neighbours == 3) {
+                updated[i][j] = true;           // Any dead cell with exactly three live neighbours becomes a live cell
+            } else {
+                updated[i][j] = false;          // Any live cell with more than three live neighbours dies
+            }
+        }
+    }
+
+    return updated;
 }
