@@ -15,8 +15,9 @@
 // Constants definitions
 #define ARG_PROGNAME 0
 #define ARG_INPUT_FILE 1
-#define ARG_OUTPUT_FILE 1
+#define ARG_OUTPUT_FILE 2
 #define ARG_GEN_COUNT 3
+#define ARG_COUNT 4
 
 // Error codes definitions
 #define ERR_FILE_NONEXIST -1        // File doesn't exist
@@ -25,35 +26,50 @@
 #define ERR_ASYMMETRIC -4           // Input table isn't symmetric
 #define ERR_FORBIDDEN_CHAR -5       // In input file is forbidden character
 #define ERR_TABLE_TOO_LARGE -6      // Input table is too large
+#define ERR_WRITE -7                // Csv write eror
 
 // Global variables definitions
 uint8_t row_num = 1, col_num = 1;   //Size of field
 
 // Functions definitions
-bool **read_csv(char *filename);                                    // Read csv file with initial conditions and create array
-uint8_t get_num_neighbours(bool **field, uint8_t row, uint8_t col); // Get the number of alive neighbour cells
-bool **update_board(bool **field);                                  // Calculate the next generation
-uint8_t write_csv(bool **field, char *filename);                    // Write game board into a csv file
+bool **read_csv(char *filename);                                                    // Read csv file with initial conditions and create array
+uint8_t get_num_neighbours(bool **field, uint8_t row, uint8_t col);                 // Get the number of alive neighbour cells
+bool **update_board(bool **field);                                                  // Calculate the next generation
+void print_board(bool **field, uint8_t row_count, uint8_t col_count);               // Print board
+bool write_csv(bool **field, char *filename, uint8_t row_count, uint8_t col_count); // Write game board into a csv file
 
 int main(int argc, char *argv[]) {
-    bool **board = read_csv("input.csv");
+    if(argc != ARG_COUNT) {
+        printf("Usage: game_of_life [INPUT FILE] [OUTPUT FILE] [LAST GENERATION]\n");
+    } else {
+        char *aux; // Auxiliary pointer for strtoul
+        uint32_t last_gen = strtoul(argv[ARG_GEN_COUNT], &aux, 10);
 
-    get_num_neighbours(board, 1, 1);
+        printf("Welcome to Conway's Game of Life\n");
+        printf("Opening file\t[");
+        bool **board = read_csv(argv[ARG_INPUT_FILE]);
+        printf("ok]\n");
+        printf("0. generation:\n");
+        print_board(board, row_num, col_num);
 
-    for(register uint8_t i = 0; i < row_num; ++i) {
-        for(register uint8_t j = 0; j < col_num; ++j) {
-            printf("%d ", board[i][j]);
+        for(register uint32_t i = 1; i <= last_gen; ++i) {
+            printf("%d. generation\n", i);
+            board = update_board(board);
+            print_board(board, row_num, col_num);
         }
-        printf("\n");
-    }
-    printf("\n");
 
-    for(register uint8_t i = 0; i < row_num; ++i) {
-        free(board[i]);
-        board[i] = NULL;
+        printf("Saving game board to %s\t[", argv[ARG_OUTPUT_FILE]);
+        write_csv(board, argv[ARG_OUTPUT_FILE], row_num, col_num);
+        printf("ok]\nExiting\n");
+
+        for(register uint8_t i = 0; i < row_num; ++i) {
+            free(board[i]);
+            board[i] = NULL;
+        }
+        free(board);
+        board = NULL;
     }
-    free(board);
-    board = NULL;
+
     return 0;
 }
 
@@ -63,12 +79,18 @@ bool **read_csv(char *filename) {
     int16_t int_buf;            // Buffer for fgetc
     uint8_t col_num_ctrl = 1;   // Auxiliary variable to detect different row lengths
 
-    if((input = fopen(filename, "r")) == NULL)          // Open input file
+    if((input = fopen(filename, "r")) == NULL) {          // Open input file
+        printf("ERR]\n");
         exit(ERR_FILE_NONEXIST);
-    if((brd = (bool**) malloc(sizeof(bool*))) == NULL)  // Pointer to pointer array initial allocation
+    }
+    if((brd = (bool**) malloc(sizeof(bool*))) == NULL) {  // Pointer to pointer array initial allocation
+        printf("ERR]\n");
         exit(ERR_ALLOC);
-    if((brd[0] = (bool*) malloc(sizeof(bool))) == NULL) // -//-
+    }
+    if((brd[0] = (bool*) malloc(sizeof(bool))) == NULL) { // -//-
+        printf("ERR]\n");
         exit(ERR_ALLOC);
+    }
 
     // Csv parsing
     while(true) {
@@ -81,8 +103,10 @@ bool **read_csv(char *filename) {
         } else if(((char) int_buf == ';') || ((char) int_buf == ',')) {     // Allowed column separators
             ++col_num;
 
-            if((brd[row_num - 1] = (bool*) realloc(brd[row_num - 1], sizeof(bool) * col_num)) == NULL)
+            if((brd[row_num - 1] = (bool*) realloc(brd[row_num - 1], sizeof(bool) * col_num)) == NULL) {
+                printf("ERR]\n");
                 exit(ERR_REALLOC);
+            }
 
             if(row_num == 1)
                 ++col_num_ctrl;
@@ -90,13 +114,18 @@ bool **read_csv(char *filename) {
         } else if((char) int_buf == '\n') {
             ++row_num;
 
-            if((brd = (bool**) realloc(brd, sizeof(bool*) * row_num)) == NULL)
+            if((brd = (bool**) realloc(brd, sizeof(bool*) * row_num)) == NULL) {
+                printf("ERR]\n");
                 exit(ERR_REALLOC);
+            }
 
-            if((brd[row_num - 1] = (bool*) malloc(sizeof(bool))) == NULL)
+            if((brd[row_num - 1] = (bool*) malloc(sizeof(bool))) == NULL) {
+                printf("ERR]\n");
                 exit(ERR_ALLOC);
+            }
 
             if((row_num > 2) && (col_num_ctrl != col_num)) {
+                printf("ERR]\n");
                 exit(ERR_ASYMMETRIC);
             }
 
@@ -106,6 +135,7 @@ bool **read_csv(char *filename) {
             break;
         // In file is undefined character
         } else {
+            printf("ERR]\n");
             exit(ERR_FORBIDDEN_CHAR);
         }
     }
@@ -113,6 +143,7 @@ bool **read_csv(char *filename) {
     col_num = col_num_ctrl;
     --row_num;
     if(col_num != row_num) { // Test if the number of rows corresponds to the number of columns
+        printf("ERR]\n");
         exit(ERR_ASYMMETRIC);
     }
 
@@ -180,4 +211,40 @@ bool **update_board(bool **field) {
     }
 
     return updated;
+}
+
+void print_board(bool **field, uint8_t row_count, uint8_t col_count) {
+    for(register uint8_t i = 0; i < row_num; ++i) {
+        for(register uint8_t j = 0; j < col_num; ++j) {
+            if(field[i][j])
+                printf("\u2588"); // full block
+            else
+                printf("\u2591"); // light shade
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+bool write_csv(bool **field, char *filename, uint8_t row_count, uint8_t col_count) {
+    FILE *output;
+
+    if((output = fopen(filename, "w")) == NULL) {
+        printf("ERR]\n");
+        exit(ERR_WRITE);
+    }
+
+    for(register uint8_t i = 0; i < row_count; ++i) {
+        for(register uint8_t j = 0; j < col_count; ++j) {
+            if(j == col_count - 1) {
+                fprintf(output, "%d", field[i][j]);
+            } else {
+                fprintf(output, "%d;", field[i][j]);
+            }
+        }
+        if(i != row_count - 1)
+            fprintf(output, "\n");
+    }
+
+    fclose(output);
 }
