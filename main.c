@@ -17,7 +17,7 @@
 #include "gol_game.h"
 
 int main(int argc, char *argv[]) {
-// On Windows UTF-8 isn't default charset. We need it
+// On Windows UTF-8 isn't default charset but we're using Unicode characters
 #ifdef _WIN32
     system("CHCP 65001");
 #endif

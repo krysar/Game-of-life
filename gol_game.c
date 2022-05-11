@@ -81,7 +81,7 @@ void print_board(bool **field, uint8_t row_count, uint8_t col_count, uint8_t pri
             if(field[i][j])
                 printf("\u2588\u2588"); // Full block
             else
-                printf("\u2591\u2591"); // light shade
+                printf("\u2591\u2591"); // Light shade
         }
         printf("\n");
     }
