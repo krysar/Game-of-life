@@ -1,6 +1,4 @@
-//
-// Created by stur on 11.5.22.
-//
+// CSV functions for Game of Life project
 
 #include "gol_csv.h"
 

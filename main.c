@@ -2,7 +2,7 @@
  * Created as project for PC2M subject
  * Author: Filip Poloček (VUT ID: 240875)
  * Created: 10.5.2022
- * Last edit: 10.5.2022
+ * Last edit: 11.5.2022
  */
 
 // Header files includes
@@ -23,10 +23,10 @@ int main(int argc, char *argv[]) {
 #endif
 
     if(argc != ARG_COUNT) {
-        printf("Usage: %s [INPUT FILE] [OUTPUT FILE] [LAST GENERATION] [PRINTING TYPE]\n", argv[ARG_PROGNAME]);
+        printf("Usage: %s [INPUT FILE] [OUTPUT FILE] [GENERATION COUNT] [PRINTING TYPE]\n", argv[ARG_PROGNAME]);
     } else {
         char *aux; // Auxiliary pointer for strtoul
-        uint32_t last_gen = strtoul(argv[ARG_GEN_COUNT], &aux, 10); // Get num of generations to calculate
+        uint32_t last_gen = (uint32_t) strtoul(argv[ARG_GEN_COUNT], &aux, 10); // Get num of generations to calculate
         uint8_t printing_type = (uint8_t) strtoul(argv[ARG_PRINTTYPE], &aux, 10);
         uint8_t row_num, col_num; // Size of board
 

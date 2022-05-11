@@ -12,9 +12,7 @@ uint8_t get_num_neighbours(bool **field, uint8_t row, uint8_t col, uint8_t row_c
             break;
         } else {
             for(register int16_t j = col - 1; j <= col + 1; ++j) {
-                if(j < 0) {
-                    continue;
-                } else if(j > col_count - 1) {
+                if((j < 0) || (j > col_count - 1)) {
                     continue;
                 } else {
                     if(j == col) {
@@ -49,14 +47,12 @@ bool **update_board(bool **field, uint8_t row_count, uint8_t col_count) {
         for(register uint8_t j = 0; j < col_count; ++j) {
             uint8_t neighbours = get_num_neighbours(field, i, j, row_count, col_count);
 
-            if(neighbours < 2) {
-                updated[i][j] = false;          // Any live cell with fewer than two live neighbours dies
-            } else if(neighbours == 2) {
+            if(neighbours == 2) {
                 updated[i][j] = field[i][j];    // Any live cell with two live neighbours stay alive/died
             } else if(neighbours == 3) {
                 updated[i][j] = true;           // Any dead cell with exactly three live neighbours becomes a live cell
             } else {
-                updated[i][j] = false;          // Any live cell with more than three live neighbours dies
+                updated[i][j] = false;          // Any live cell with more than three live neighbours dies, any live cell with fewer than two live neighbours dies
             }
         }
     }
@@ -68,14 +64,22 @@ void print_board(bool **field, uint8_t row_count, uint8_t col_count, uint8_t pri
 #ifdef _WIN32
     if(print_type == 1)
         system("cls");
-#elif defined(__unix) || defined(__unix__) || defined(linux) || defined(__linux) || defined(__linux__)
+    else if(print_type != 0) {
+        printf("Error: undefined printing format\n");
+        exit(ERR_UNDEFINED_PRINTING);
+    }
+#elif defined(__linux)
     if(print_type == 1)
         system("clear");
+    else if(print_type != 0) {
+        printf("Error: undefined printing format\n");
+        exit(ERR_UNDEFINED_PRINTING);
+    }
 #endif
     for(register uint8_t i = 0; i < row_count; ++i) {
         for(register uint8_t j = 0; j < col_count; ++j) {
             if(field[i][j])
-                printf("\u2588\u2588"); // full block
+                printf("\u2588\u2588"); // Full block
             else
                 printf("\u2591\u2591"); // light shade
         }

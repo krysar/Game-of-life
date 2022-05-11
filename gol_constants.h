@@ -19,5 +19,6 @@
 #define ERR_FORBIDDEN_CHAR -5       // In input file is forbidden character
 #define ERR_TABLE_TOO_LARGE -6      // Input table is too large
 #define ERR_WRITE -7                // Csv write eror
+#define ERR_UNDEFINED_PRINTING -8   // Undefined printing format
 
 #endif //GAME_OF_LIFE_GOL_CONSTANTS_H
