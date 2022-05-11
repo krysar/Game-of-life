@@ -3,7 +3,7 @@
 
 
 Implementace Conwayova celulárního automatu. \
-Podrobná dokumentace je v souboru docs/dokumentace.pdf \
+Podrobná dokumentace je v souboru doc/dokumentace.pdf \
 Zkompilované spustitelné soubory jsou ve adresáři bin/ \
 Ukázkové vstupní konfigurace jsou v adresáři input/
 

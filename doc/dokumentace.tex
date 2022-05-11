@@ -1,0 +1,178 @@
+% Povinný argument: Kód předmětu
+\newcommand{\subject}{BPC-PC2M}
+% Povinný argument: Název předmětu
+\newcommand{\subjectname}{Závěrečný projekt}
+% Povinný argument: Seznam autorů
+\newcommand{\authors}{Filip Poloček, 240875}
+% Povinný argument: Seznam korektorů
+%\newcommand{\corrections}{}
+% Nepovinný argument: Popis dokumentu
+\newcommand{\docdesc}{Game of Life}
+% Nepovinný argument: Cílová skupina dokumentu
+\newcommand{\docgroup}{}
+% Nepovinný argument: URL repozitáře nebo jiný odkaz na dokument
+\newcommand{\docurl}{https://github.com/krysar/Game-of-life}
+
+% Přepsáním argumentu na 'false' vypnete balíček 'minted' pro sázení kódu.
+% Pro jeho použití lokálně musíte mít v systému dostupný Python 3, python
+% knihovnu 'minted' a PDFLaTeX musíte spouštět s argumentem '-shell-escape'.
+% Místo něj můžete použít prostředí 'lstlisting'.
+\newcommand{\docminted}{true}
+
+\input{shared}
+
+\begin{document}
+
+\titulka{}
+
+\tableofcontents
+\thispagestyle{empty}
+
+\setcounter{page}{0}
+
+\newpage
+
+\section{Game of Life}
+\label{sec:gol}
+Hra života (anglicky \textit{Game of Life}) je dvoustavový celulární automat, který má chováním připomínat společenství živých organismů. Odehrává se na 2D matici buněk.
+
+Buňka může nabývat dvou stavů - je buď mrtvá nebo živá. Její stav v následující generaci je určen stavem jí samotné a jejího Moorova okolí (tj. buněk, se kterými sousedí hranou nebo vrcholem).
+
+Hra života je definována pravidly sestavenými britským matematikem Johnem Conwayem, jež jsou označována jako S23/B3:
+\begin{enumerate}
+	\item Každá živá buňka s méně než dvěma živými sousedy zemře.
+	\item Každá živá buňka se dvěma nebo třemi živými sousedy zůstává žít.
+	\item Každá živá buňka s více než třemi živými sousedy zemře.
+	\item Každá mrtvá buňka s právě třemi živými sousedy oživne.
+\end{enumerate}
+
+\section{Základní popis programu}
+\label{sec:zak_pop}
+Program načítá výchozí konfiguraci z csv souboru (viz \underline{\hyperref[sec:format]{kapitola 3}}), nechá proběhnout vývoj herního pole po stanovený počet generací a výsledné herní pole uloží do csv souboru ve stejném formátu, jako je vstup. Průběžný vývoj herního pole je vypisován do konzole jedním ze dvou způsobů.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.5\textwidth]{images/toad_run.png}
+	\caption{Příklad běhu programu pro 4 generace oscilátoru typu Toad (ropucha)}
+	\label{img:1}
+\end{figure}
+
+\section{Ovládání}
+\label{sec:ovl}
+Veškeré parametry jsou programu předávány při spuštění pomocí argumentů příkazového řádku. Syntaxe je následovná:\\
+	\texttt{> název{\_}programu [INPUT FILE] [OUTPUT FILE] [GENERATION COUNT] [PRINTING TYPE]}\\
+\textbf{Popis parametrů:}\\
+\begin{tabular}{l l}
+	název{\_}programu & Název spouštěného programu, např. game{\_}of{\_}life.exe \\
+	{[INPUT FILE]} & Vstupní csv soubor \\
+	{[OUTPUT FILE]} & Výstupní csv soubor \\
+	{[GENERATION COUNT]} & Počet generací, po který má hra probíhat. Počáteční je nultá. \\
+	{[PRINTING TYPE]} & Formát výpisu do konzole (viz \underline{\hyperref[sec:vypis]{kapitola 5}})
+\end{tabular}
+
+\textbf{Příklad:}\\
+\texttt{> game{\_}of{\_}life.exe toad.csv output.csv 30 1}
+
+Vzhledem ke způsobu předávání parametrů programu a absenci jakékoliv \textit{zarážky} zabraňující ukončení programu po jeho doběhnutí je nutno program spouštět přímo z prostředí příkazové řádky, nikoliv tedy například rozkliknutí .exe souboru ve správci souborů.
+
+\section{Formát vstupního souboru}
+\label{sec:format}
+Vstupem je csv soubor, ten definuje počáteční konfiguraci a také velikost herního pole. Jde o tabulku jedniček a nul, jednička je buňka živá, nula buňka mrtvá. Povolený oddělovač sloupců je středník (;) a čárka (,). Velikost herního pole je definována počtem řádků a sloupců tabulky, pole musí být čtvercové (tj. počet sloupců se musí rovnat počtu řádků).
+
+\begin{code}
+\centering
+\texttt{0;0;0;0\\0;1;1;1\\1;1;1;0\\0;0;0;0}
+\caption{Příklad vstupního csv souboru pro oscilátor typu Toad}
+\label{code:csv}
+Velikost pole je omezena na 255 řádků/sloupců.
+\end{code}
+
+
+\section{Herní pole}
+\label{sec:gamefield}
+Jak již bylo zmíněno, jde o matici dvoustavových prvků. V programu je implementováno jako dynamicky alokované 2D pole (pointer na pointer) booleanů (datový typ \texttt{bool} z hlavičkového souboru \texttt{stdbool.h}). Jeho alokace probíhá poněkud komplikovaněji v rámci funkce \texttt{read{\_}csv}.
+
+Před počátkem čtení je pole alokováno s velikostí 1x1. Při každém načtení oddělovače sloupců (viz předchozí kapitola) dojde k realokaci s inkrementovaným počtem sloupců, při každém načtení nového řádku pak k realokaci s inkrementovaným počtem řádků. Průběžně probíhá kontrola symetričnosti pole.
+
+Zdrojový kód zde není pro jeho délku začleněn, funkce se nachází v souboru \texttt{gol{\_}csv.c}.
+
+\section{Formát výpisu}
+\label{sec:vypis}
+Výpis probíhá do \textit{stdout}, což je standardně konzole. Pro správné zobrazení (především u výstupního formátu 1) je nutno zajistit, aby počet řádků konzole odpovídal velikosti herního pole a počet sloupců jeho dvojnásobku.
+
+Posledním vstupním parametrem programu je \texttt{[PRINTING TYPE]} definující druh výpisu, povolené hodnoty jsou 0 a 1.
+
+\subsection{Formát 0}
+Tento formát vypíše všechny generace herního pole pod sebe do konzole.
+
+\subsection{Formát 1}
+Po každém výpisu herního pole do konzole je zavolán systémový příkaz na její vyčištění (pro Windows \textit{cls}, pro Linux \textit{clear}), díky čemuž je možno relativně názorně sledovat pohyb buněk v poli. Omezením je především rychlost výpisu, u většího herního pole lze narazit na problikávání. Výpis taktéž není nijak bržděn, proto má tenhle formát výpisu smysl jen pro velký počet generací.
+
+Níže je zdrojový kód funkce sloužící k výpisu do konzole, zavolání správného systémového příkazu pro danou platformu je zajištěno podmíněným překladem.
+\newpage
+\begin{code}
+\begin{minted}[frame=lines,framesep=2mm,baselinestretch=1.2,fontsize=\footnotesize,linenos]
+{c}
+void print_board(bool **field, uint8_t row_count, uint8_t col_count, uint8_t print_type) {
+#ifdef _WIN32
+    if(print_type == 1)
+        system("cls");
+    else if(print_type != 0) {
+        printf("Error: undefined printing format\n");
+        exit(ERR_UNDEFINED_PRINTING);
+    }
+#elifdef __linux
+    if(print_type == 1)
+        system("clear");
+    else if(print_type != 0) {
+        printf("Error: undefined printing format\n");
+        exit(ERR_UNDEFINED_PRINTING);
+    }
+#endif
+    for(register uint8_t i = 0; i < row_count; ++i) {
+        for(register uint8_t j = 0; j < col_count; ++j) {
+            if(field[i][j])
+                printf("\u2588\u2588"); // Full block
+            else
+                printf("\u2591\u2591"); // Light shade
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+\end{minted}
+\caption{Funkce pro výpis herního pole}
+\label{code:print_board}
+\end{code}
+\newpage
+Povšimněte si použitých znaků pro pro buňky. Pro živou buňku jsou použity dva znaky \textit{full block}, pro mrtvou dva znaky \textit{light shade}. Nejde o znaky z ASCII, nýbrž z Unicode. Pod Linuxem (a také jinými moderními UN*X systémy) to není problém, standardně se již léta používá znaková sada UTF-8. Pod Windows ovšem nikoliv, je proto ji třeba už na začátku běhu programu manuálně přepnout. Toho jsem docílil podmíněným překladem na začátku funkce main:
+\begin{code}
+\begin{minted}[frame=lines,framesep=2mm,baselinestretch=1.2,fontsize=\footnotesize,linenos]
+{c}
+int main(int argc, char *argv[]) {
+// On Windows UTF-8 isn't default charset but we're using Unicode characters
+#ifdef _WIN32
+    system("CHCP 65001");
+#endif
+...
+\end{minted}
+\caption{Přepínání znakové sady ve Windows}
+\label{code:chcp}
+\end{code}
+
+\section{Vývoj herního pole}
+\label{sec:vyvoj}
+Základní algoritmus pro výpočet následující generace je poměrně jednoduchý a je objasněn v \underline{\hyperref[sec:gol]{první kapitole}}. Taktéž lze vyjádřit tímto vývojovým diagramem:
+\begin{figure}[H]
+	\includegraphics[width=\textwidth]{images/diagram}
+	\caption{Diagram vývoje herního pole}
+	\label{img:2}
+\end{figure}
+
+V rámci programu je algoritmus (s mírným zjednodušením) implementován ve funkci \texttt{update{\_}board} závislé na funkci \texttt{get{\_}num{\_}neighbours} sloužící ke zjištění počtu živých buněk v Moorově okolí zkoumané buňky.
+
+\section{Kompatibilita}
+Program je plně kompatibilní s linuxovými distribucemi používající znakovou sadu UTF-8 a se systémem Windows. Částečná kompatibilita je s ostatními UN*X systémy (např. Mac OS), zde není bez doplnění podmíněného překladu možno použít \textit{formát výpisu 1}.
+
+Pro korektní výpis herního pole do konzole je taktéž vhodné, aby počet řádků konzole byl roven velikosti pole a počet sloupců jeho dvojnásobku (čehož lze docílit zmenšením fontu).
+
+\end{document}
