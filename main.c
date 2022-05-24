@@ -1,6 +1,6 @@
 /* Game of Life
  * Created as project for PC2M subject
- * Author: Filip Poloček (VUT ID: 240875)
+ * Author: Šťur
  * Created: 10.5.2022
  * Last edit: 11.5.2022
  */
